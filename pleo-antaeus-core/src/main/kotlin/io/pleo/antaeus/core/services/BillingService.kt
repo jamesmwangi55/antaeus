@@ -9,5 +9,6 @@ class BillingService(
 ) {
     fun charge() {
         val invoices = dal.fetchPendingInvoices()
+
     }
 }
