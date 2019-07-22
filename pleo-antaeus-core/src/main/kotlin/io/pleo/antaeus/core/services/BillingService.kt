@@ -7,5 +7,7 @@ class BillingService(
     private val paymentProvider: PaymentProvider,
     private val dal: AntaeusDal
 ) {
-
+    fun charge() {
+        val invoices = dal.fetchPendingInvoices()
+    }
 }
