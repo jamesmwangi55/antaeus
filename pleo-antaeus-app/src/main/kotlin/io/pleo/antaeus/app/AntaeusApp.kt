@@ -80,7 +80,7 @@ fun main() {
     val trigger = TriggerBuilder.newTrigger()
             .withIdentity("billingTrigger", "group1")
             .startNow()
-            .withSchedule(cronSchedule("0/20 * * * * ?"))
+            .withSchedule(cronSchedule("0 0 12 1 1/1 ? *"))
             .build()
 
 
