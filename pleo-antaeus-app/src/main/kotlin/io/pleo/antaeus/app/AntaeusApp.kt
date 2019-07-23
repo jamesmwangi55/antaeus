@@ -15,14 +15,23 @@ import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.CustomerTable
 import io.pleo.antaeus.data.InvoiceTable
 import io.pleo.antaeus.rest.AntaeusRest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.quartz.*
+import org.quartz.JobBuilder.*
+import org.quartz.SimpleScheduleBuilder.simpleSchedule
+import org.quartz.impl.StdSchedulerFactory
 import setupInitialData
 import java.sql.Connection
+import kotlin.math.log
 
 fun main() {
     // The tables to create in the database.
@@ -63,5 +72,50 @@ fun main() {
         invoiceService = invoiceService,
         customerService = customerService
     ).run()
+
+    // Implement scheduler to run billing service on first of every month
+    val schedulerFactory = StdSchedulerFactory()
+
+    val scheduler = schedulerFactory.scheduler
+
+    class BillingServiceJob: Job {
+
+        override fun execute(context: JobExecutionContext?) {
+            GlobalScope.launch (Dispatchers.Default) {
+                var schedulerContext: SchedulerContext? = null
+
+                try {
+                    schedulerContext = context?.scheduler?.context
+                } catch (e: SchedulerException) {
+                    e.printStackTrace()
+                }
+                val billingService1: BillingService = schedulerContext!!["billingService"] as BillingService
+                billingService1.charge()
+            }
+
+        }
+    }
+
+    val jobDetail = newJob(BillingServiceJob::class.java)
+            .withIdentity("billingService", "group1")
+            .build()
+
+    val trigger = TriggerBuilder.newTrigger()
+            .withIdentity("billingTrigger", "group1")
+            .startNow()
+            .withSchedule(simpleSchedule()
+                    .withIntervalInSeconds(40)
+                    .repeatForever())
+            .build()
+
+
+    scheduler.context["billingService"] = billingService
+
+    scheduler.scheduleJob(jobDetail, trigger)
+
+    scheduler.start()
+
+
 }
+
 
