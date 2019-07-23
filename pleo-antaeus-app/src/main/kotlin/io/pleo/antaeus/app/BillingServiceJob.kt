@@ -28,7 +28,6 @@ class BillingServiceJob : Job, CoroutineScope {
             }
             val billingService1: BillingService = schedulerContext!!["billingService"] as BillingService
             billingService1.charge()
-            print("run job")
         }
 
     }
