@@ -12,6 +12,7 @@ application {
 }
 
 dependencies {
+    implementation("org.quartz-scheduler:quartz:2.3.1")
     implementation(project(":pleo-antaeus-data"))
     implementation(project(":pleo-antaeus-rest"))
     implementation(project(":pleo-antaeus-core"))
