@@ -4,13 +4,12 @@ import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
 import kotlinx.coroutines.*
 
-@ObsoleteCoroutinesApi
 class BillingService(
     private val paymentProvider: PaymentProvider,
     private val dal: AntaeusDal
 ) {
 
-    val handler = CoroutineExceptionHandler{coroutineContext, throwable ->
+    val handler = CoroutineExceptionHandler{_, throwable ->
 
     }
 
