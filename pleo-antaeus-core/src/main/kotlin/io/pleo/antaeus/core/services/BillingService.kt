@@ -1,18 +1,42 @@
 package io.pleo.antaeus.core.services
 
+import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
+import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
+import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.InvoiceStatus
 import kotlinx.coroutines.*
+import mu.KotlinLogging
+
+val logger = KotlinLogging.logger {  }
 
 class BillingService(
     private val paymentProvider: PaymentProvider,
     private val dal: AntaeusDal
 ) {
 
-    val handler = CoroutineExceptionHandler{_, throwable ->
+    private val handler = CoroutineExceptionHandler{ _, throwable ->
+        if (throwable is CustomerNotFoundException) {
+            logger.error(throwable) {"Customer does not exist"}
+            return@CoroutineExceptionHandler
+        }
+
+        if (throwable is CurrencyMismatchException) {
+            logger.error(throwable) {"Currency mismatch"}
+            return@CoroutineExceptionHandler
+        }
+
+        if (throwable is NetworkException) {
+            logger.error(throwable) {"Network error"}
+            return@CoroutineExceptionHandler
+        }
+
+        logger.error(throwable) {"Error occurred"}
+        return@CoroutineExceptionHandler
 
     }
+
 
     suspend fun charge() = coroutineScope{
         val invoices = dal.fetchPendingInvoices()
